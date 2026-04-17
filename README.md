@@ -53,6 +53,20 @@ Useful scripts:
 | `npm run build` | Type-check with `tsc -b` and produce a production build in `dist/`. |
 | `npm run preview` | Serve the production build locally. |
 | `npm run lint` | Run ESLint across the project. |
+| `npm test` | Run the Vitest test suite once. |
+| `npm run test:watch` | Run Vitest in watch mode. |
+| `npm run test:coverage` | Run the test suite and emit a coverage report in `coverage/`. |
+
+### Testing
+
+The project is tested with [Vitest](https://vitest.dev/) and
+[React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+running in a jsdom environment. The suite covers pure utilities (string
+parsing, transcript matching, random helpers), the game round hook, each
+screen component (Setup, Mode select, and all three game modes), and an
+end-to-end flow through `App`. The Web Speech APIs are stubbed with a
+deterministic mock in `src/test/mockSpeech.ts` so voice recognition and
+synthesis behavior can be exercised without a real browser.
 
 ## Deployment to GitHub Pages
 

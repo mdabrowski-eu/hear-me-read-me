@@ -9,6 +9,11 @@ import type { GameConfig } from "../types";
 import { SoundToLettersScreen } from "./SoundToLettersScreen";
 
 const CONFIG: GameConfig = {
+  strings: ["kotek", "piesek", "rybka", "krowa"],
+  lang: "polish",
+};
+
+const SHORT_SYLLABLE_CONFIG: GameConfig = {
   strings: ["pa", "pe", "pi", "po"],
   lang: "polish",
 };
@@ -41,6 +46,24 @@ describe("SoundToLettersScreen", () => {
     await waitForSpokenUtterance();
     expect(synth.utterances[0].lang).toBe("pl-PL");
     expect(CONFIG.strings).toContain(synth.utterances[0].text);
+  });
+
+  it("repeats short Polish syllables so the voice pronounces them clearly", async () => {
+    render(
+      <SoundToLettersScreen config={SHORT_SYLLABLE_CONFIG} onExit={vi.fn()} />,
+    );
+    await waitForSpokenUtterance();
+    const utterance = synth.utterances[0];
+    expect(utterance.text).toMatch(/^(pa|pe|pi|po)(, \1){2}$/);
+    expect(utterance.rate).toBeLessThan(0.9);
+  });
+
+  it("leaves longer Polish words unchanged when speaking", async () => {
+    render(<SoundToLettersScreen config={CONFIG} onExit={vi.fn()} />);
+    await waitForSpokenUtterance();
+    const utterance = synth.utterances[0];
+    expect(CONFIG.strings).toContain(utterance.text);
+    expect(utterance.rate).toBeCloseTo(0.9);
   });
 
   it("uses the English locale when configured for English", async () => {

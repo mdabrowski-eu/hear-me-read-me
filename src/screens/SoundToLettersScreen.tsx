@@ -5,6 +5,7 @@ import { FeedbackBanner, type FeedbackStatus } from "../components/FeedbackBanne
 import { GameHeader } from "../components/GameHeader";
 import { Screen } from "../components/Screen";
 import { useGameRound } from "../game/useGameRound";
+import { renderSpokenText } from "../speech/renderSpokenText";
 import {
   cancelSpeech,
   isSpeechSynthesisSupported,
@@ -44,7 +45,8 @@ function Round({ currentString, lang, strings, onComplete }: RoundProps) {
   const [selected, setSelected] = useState<string | null>(null);
 
   const playSound = useCallback(() => {
-    void speak({ text: currentString, lang }).catch(() => {
+    const spoken = renderSpokenText({ text: currentString, lang });
+    void speak({ text: spoken.text, lang, rate: spoken.rate }).catch(() => {
       // Ignore synthesis errors; user can replay manually.
     });
   }, [currentString, lang]);

@@ -2,6 +2,15 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  __resetAudioManifestForTests,
+  loadAudioManifest,
+} from "../audio/audioManifest";
+import { resetAudioFactoryForTests } from "../audio/playSpoken";
+import {
+  createMockAudio,
+  type MockAudioApi,
+} from "../test/mockAudio";
+import {
   createMockSpeechSynthesis,
   type MockSpeechSynthesisApi,
 } from "../test/mockSpeech";
@@ -19,14 +28,32 @@ const SHORT_SYLLABLE_CONFIG: GameConfig = {
 };
 
 let synth: MockSpeechSynthesisApi;
+let audio: MockAudioApi;
 
-beforeEach(() => {
+function jsonResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    headers: { "content-type": "application/json" },
+  });
+}
+
+async function primeEmptyManifest() {
+  await loadAudioManifest(() => Promise.resolve(jsonResponse({ pl: {}, en: {} })));
+}
+
+beforeEach(async () => {
+  __resetAudioManifestForTests();
   synth = createMockSpeechSynthesis();
   synth.install();
+  audio = createMockAudio();
+  audio.install("success");
+  await primeEmptyManifest();
 });
 
 afterEach(() => {
   synth.uninstall();
+  audio.uninstall();
+  resetAudioFactoryForTests();
+  __resetAudioManifestForTests();
 });
 
 function getOptionButtons(): HTMLButtonElement[] {
@@ -64,6 +91,27 @@ describe("SoundToLettersScreen", () => {
     const utterance = synth.utterances[0];
     expect(CONFIG.strings).toContain(utterance.text);
     expect(utterance.rate).toBeCloseTo(0.9);
+  });
+
+  it("prefers a pre-recorded audio file when one is registered in the manifest", async () => {
+    __resetAudioManifestForTests();
+    await loadAudioManifest(() =>
+      Promise.resolve(
+        jsonResponse({
+          pl: {
+            kotek: "pl/kotek.mp3",
+            piesek: "pl/piesek.mp3",
+            rybka: "pl/rybka.mp3",
+            krowa: "pl/krowa.mp3",
+          },
+        }),
+      ),
+    );
+    render(<SoundToLettersScreen config={CONFIG} onExit={vi.fn()} />);
+    await waitFor(() => expect(audio.instances.length).toBeGreaterThan(0));
+    expect(audio.latest().src).toMatch(/\/audio\/pl\/(kotek|piesek|rybka|krowa)\.mp3$/);
+    expect(audio.latest().play).toHaveBeenCalledTimes(1);
+    expect(synth.utterances).toHaveLength(0);
   });
 
   it("uses the English locale when configured for English", async () => {

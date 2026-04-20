@@ -1,16 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cancelSpokenPlayback, playSpoken } from "../audio/playSpoken";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { FeedbackBanner, type FeedbackStatus } from "../components/FeedbackBanner";
 import { GameHeader } from "../components/GameHeader";
 import { Screen } from "../components/Screen";
 import { useGameRound } from "../game/useGameRound";
-import { renderSpokenText } from "../speech/renderSpokenText";
-import {
-  cancelSpeech,
-  isSpeechSynthesisSupported,
-  speak,
-} from "../speech/speechSynthesis";
+import { isSpeechSynthesisSupported } from "../speech/speechSynthesis";
 import { MODE_LABEL, type GameConfig, type Language } from "../types";
 import { sampleDistinct } from "../utils/random";
 
@@ -43,18 +39,26 @@ function Round({ currentString, lang, strings, onComplete }: RoundProps) {
   );
   const [feedback, setFeedback] = useState<Feedback>(INITIAL_FEEDBACK);
   const [selected, setSelected] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const playSound = useCallback(() => {
-    const spoken = renderSpokenText({ text: currentString, lang });
-    void speak({ text: spoken.text, lang, rate: spoken.rate }).catch(() => {
-      // Ignore synthesis errors; user can replay manually.
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    void playSpoken({
+      text: currentString,
+      lang,
+      signal: controller.signal,
+    }).catch(() => {
+      // Ignore playback errors; user can replay manually.
     });
   }, [currentString, lang]);
 
   useEffect(() => {
     playSound();
     return () => {
-      cancelSpeech();
+      abortControllerRef.current?.abort();
+      cancelSpokenPlayback();
     };
   }, [playSound]);
 

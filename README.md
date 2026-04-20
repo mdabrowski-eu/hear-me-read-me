@@ -16,8 +16,10 @@ that you can pick one of three exercise modes:
   and you read it aloud into the microphone. The browser transcribes your
   voice and confirms whether it matches.
 - **Dźwięk → Litery (`sound_to_letters`)** — the app pronounces one of your
-  sequences using speech synthesis and asks you to pick the matching letters
-  from a 2×2 grid of four options.
+  sequences and asks you to pick the matching letters from a 2×2 grid of four
+  options. Pre-recorded `.mp3` files registered in
+  [`public/audio/manifest.json`](./public/audio/manifest.json) take priority;
+  otherwise the app falls back to speech synthesis.
 - **Litery → Litery (`letters_to_letters`)** — a gentle reading exercise for
   children: a letter sequence is shown at the top and you pick the identical
   one from a 2×2 grid.
@@ -29,6 +31,10 @@ that you can pick one of three exercise modes:
 - The **Web Speech API** for both speech synthesis (`SpeechSynthesis`) and
   voice recognition (`SpeechRecognition` / `webkitSpeechRecognition`). This is
   fully client-side, supports Polish and English, and requires no backend.
+- Optional **pre-recorded audio** loaded eagerly from
+  `public/audio/manifest.json` and played with the standard `HTMLAudioElement`
+  when available. See [`public/audio/README.md`](./public/audio/README.md) for
+  the manifest format.
 
 > Speech recognition (`letters_to_sound`) works best in Chromium-based
 > browsers (Chrome, Edge). Safari and Firefox may not expose it; in that case

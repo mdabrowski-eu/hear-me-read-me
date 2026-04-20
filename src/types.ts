@@ -20,6 +20,13 @@ export const LANGUAGE_LOCALE: Record<Language, string> = {
   english: "en-US",
 };
 
+export type ManifestLanguageKey = "pl" | "en";
+
+export const LANGUAGE_MANIFEST_KEY: Record<Language, ManifestLanguageKey> = {
+  polish: "pl",
+  english: "en",
+};
+
 export const MODE_LABEL: Record<GameMode, string> = {
   letters_to_sound: "Litery → Dźwięk",
   sound_to_letters: "Dźwięk → Litery",
